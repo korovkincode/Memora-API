@@ -1,5 +1,9 @@
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
+from db_init import setup_users
+
+
+setup_users('Users')
 
 app = FastAPI()
 
@@ -14,5 +18,4 @@ async def root() -> dict:
 @app.post("/register")
 async def register(user_json: User) -> dict:
     user = user_json.dict()
-    
     return {"message": "Got data"}
