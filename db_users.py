@@ -19,7 +19,7 @@ def connect(db_name: str):
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def addUser(db_name: str, user: dict) -> str:
+def addUser(db_name: str, user: dict) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if conn.execute(table.select().where(table.columns.Username == user['username'])).fetchall():
@@ -28,7 +28,7 @@ def addUser(db_name: str, user: dict) -> str:
     conn.execute(query)
     return {'message': 'Add new user'}
 
-def authUser(db_name: str, user: dict) -> str:
+def authUser(db_name: str, user: dict) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Username == user['username'])).fetchall()
