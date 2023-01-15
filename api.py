@@ -17,4 +17,9 @@ async def root() -> dict:
 @app.post("/register")
 async def register(user_json: User) -> dict:
     user = user_json.dict()
-    return db_users.insertUser('Users', user)
+    return db_users.addUser('Users', user)
+
+@app.post("/login")
+async def login(user_json: User) -> dict:
+    user = user_json.dict()
+    return db_users.authUser('Users', user)
