@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Body, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import db_users, db_posts
@@ -39,3 +39,9 @@ async def login(user_json: User) -> dict:
 async def create(post_json: Post) -> dict:
     post = post_json.dict()
     return db_posts.createPost("Posts", post)
+
+@app.get("/api/post/read/{post_id}")
+async def read(post_id: int, request: Request) -> dict:
+    #print(request.headers)
+    return {"message": post_id}
+    #return db_posts.readPost("Posts", token, post_id)

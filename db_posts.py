@@ -30,3 +30,15 @@ def createPost(db_name: str, post: dict):
         conn.execute(query)
         return {"message": "Add new post"}
     return {"message": "Cannot handle a file yet!"}
+
+def readPost(db_name: str, post_id: int, token: str):
+    engine, conn, metadata = connect(db_name)
+    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+    table_list = conn.execute(table.select().where(table.columns.PostID == post_id).fetchall())
+    if not table_list:
+        return {"message": "No such post"}
+    if table_list[0][1] != token:
+        return {"message": "Wrong token!"}
+    if table_list[0][3] == True:
+        return {"message": "Cannot handle a file yet!"}
+    return {"message": table_list[0][2]}
