@@ -34,5 +34,4 @@ def authUser(db_name: str, user: dict) -> dict:
     table_list = conn.execute(table.select().where(table.columns.Username == user['username'])).fetchall()
     if table_list:
         return {'message': table_list[0][3]}
-    else:
-        return {'message': 'No such user'}
+    return {'message': 'No such user'}
