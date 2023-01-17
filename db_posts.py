@@ -15,12 +15,12 @@ def setup(db_name: str) -> None:
     metadata.create_all(engine)
 
 def connect(db_name: str):
-    engine = db.create_engine(f"sqlite:///{db_name}.sqlite")
+    engine = db.create_engine(f"sqlite:///db/{db_name}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def addPost(db_name: str, post: dict):
+def createPost(db_name: str, post: dict):
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if not db_users.getUserByToken("Users", post['token']):
