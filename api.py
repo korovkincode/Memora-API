@@ -42,6 +42,5 @@ async def create(post_json: Post) -> dict:
 
 @app.get("/api/post/read/{post_id}")
 async def read(post_id: int, request: Request) -> dict:
-    #print(request.headers)
-    return {"message": post_id}
-    #return db_posts.readPost("Posts", token, post_id)
+    token = request.headers.get('token')
+    return db_posts.readPost("Posts", post_id, token)

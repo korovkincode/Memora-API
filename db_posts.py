@@ -34,7 +34,8 @@ def createPost(db_name: str, post: dict):
 def readPost(db_name: str, post_id: int, token: str):
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
-    table_list = conn.execute(table.select().where(table.columns.PostID == post_id).fetchall())
+    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    print(table_list, post_id, type(post_id))
     if not table_list:
         return {"message": "No such post"}
     if table_list[0][1] != token:
