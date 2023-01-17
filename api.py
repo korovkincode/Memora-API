@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import db_users, db_posts
 
+#TOKEN -> b5eed51d8b
+
 db_users.setup('Users')
 db_posts.setup('Posts')
 
@@ -33,4 +35,4 @@ async def login(user_json: User) -> dict:
 @app.post("/api/add")
 async def add(post_json: Post) -> dict:
     post = post_json.dict()
-    return {"message": "Hello, World!"}
+    return db_posts.addPost("Posts", post)
