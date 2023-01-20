@@ -44,3 +44,8 @@ async def create(post_json: Post) -> dict:
 async def read(post_id: int, request: Request) -> dict:
     token = request.headers.get('token')
     return db_posts.readPost("Posts", post_id, token)
+
+@app.put("/api/post/update/{post_id}")
+async def update(post_id: int, post_json: Post) -> dict:
+    post = post_json.dict()
+    return db_posts.updatePost("Posts", post, post_id)

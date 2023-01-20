@@ -20,7 +20,7 @@ def connect(db_name: str):
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(db_name: str, post: dict):
+def createPost(db_name: str, post: dict) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if not db_users.getUserByToken("Users", post['token']):
@@ -28,14 +28,16 @@ def createPost(db_name: str, post: dict):
     if not post['is_file']:
         query = db.insert(table).values(UserToken=post['token'], Data=post['data'], IsFile=False)
         conn.execute(query)
-        return {"message": "Add new post"}
+        table_list = conn.execute(table.select()).fetchall()
+        cur_id = table_list[0][0]
+        return {"message": f"/api/post/read/{cur_id}"}
     return {"message": "Cannot handle a file yet!"}
 
-def readPost(db_name: str, post_id: int, token: str):
+def readPost(db_name: str, post_id: int, token: str) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
-    print(table_list, post_id, type(post_id))
+    #print(table_list, post_id, type(post_id))
     if not table_list:
         return {"message": "No such post"}
     if table_list[0][1] != token:
@@ -43,3 +45,13 @@ def readPost(db_name: str, post_id: int, token: str):
     if table_list[0][3] == True:
         return {"message": "Cannot handle a file yet!"}
     return {"message": table_list[0][2]}
+
+def updatePost(db_name: str, post: dict, post_id: int):
+    engine, conn, metadata = connect(db_name)
+    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if not table_list:
+        return {"message": "No such post"}
+    query = table.delete().where(table.columns.PostID == post_id)
+    conn.execute(query)
+    return createPost(db_name, post)
