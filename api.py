@@ -21,6 +21,9 @@ class Post(BaseModel):
     data: str
     is_file: bool
 
+class Token(BaseModel):
+    token: str
+
 @app.get("/api/")
 async def root() -> dict:
     return {"message": "Hello, World!"}
@@ -40,12 +43,17 @@ async def create(post_json: Post) -> dict:
     post = post_json.dict()
     return db_posts.createPost("Posts", post)
 
-@app.get("/api/post/read/{post_id}")
+@app.get("/api/post/{post_id}/read/")
 async def read(post_id: int, request: Request) -> dict:
     token = request.headers.get('token')
     return db_posts.readPost("Posts", post_id, token)
 
-@app.put("/api/post/update/{post_id}")
+@app.put("/api/post/{post_id}/update/")
 async def update(post_id: int, post_json: Post) -> dict:
     post = post_json.dict()
     return db_posts.updatePost("Posts", post, post_id)
+
+@app.delete("/api/post/{post_id}/delete/")
+async def delete(post_id: int, token_json: Token) -> dict:
+    token = token_json.dict()["token"]
+    return db_posts.deletePost("Posts", post_id, token)

@@ -6,11 +6,11 @@ def setup(db_name: str) -> None:
 
     posts = db.Table(
         db_name.capitalize(), metadata,
-        db.Column('PostID', db.Integer(), primary_key=True),
-        db.Column('UserToken', db.String(10), nullable=False),
-        db.Column('Data', db.String(), nullable=False),
-        db.Column('IsFile', db.Boolean(), default=False, nullable=False),
-        db.Column('Path', db.String(100))
+        db.Column("PostID", db.Integer(), primary_key=True),
+        db.Column("UserToken", db.String(10), nullable=False),
+        db.Column("Data", db.String(), nullable=False),
+        db.Column("IsFile", db.Boolean(), default=False, nullable=False),
+        db.Column("Path", db.String(100))
     )
     metadata.create_all(engine)
 
@@ -23,14 +23,14 @@ def connect(db_name: str):
 def createPost(db_name: str, post: dict) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
-    if not db_users.getUserByToken("Users", post['token']):
+    if not db_users.getUserByToken("Users", post["token"]):
         return {"message": "No such user"}
-    if not post['is_file']:
-        query = db.insert(table).values(UserToken=post['token'], Data=post['data'], IsFile=False)
+    if not post["is_file"]:
+        query = db.insert(table).values(UserToken=post["token"], Data=post["data"], IsFile=False)
         conn.execute(query)
         table_list = conn.execute(table.select()).fetchall()
         cur_id = table_list[0][0]
-        return {"message": f"/api/post/read/{cur_id}"}
+        return {"message": f"/api/post/{cur_id}/read/"}
     return {"message": "Cannot handle a file yet!"}
 
 def readPost(db_name: str, post_id: int, token: str) -> dict:
@@ -46,7 +46,7 @@ def readPost(db_name: str, post_id: int, token: str) -> dict:
         return {"message": "Cannot handle a file yet!"}
     return {"message": table_list[0][2]}
 
-def updatePost(db_name: str, post: dict, post_id: int):
+def updatePost(db_name: str, post: dict, post_id: int) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -55,3 +55,15 @@ def updatePost(db_name: str, post: dict, post_id: int):
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
     return createPost(db_name, post)
+
+def deletePost(db_name: str, post_id: int, token: str) -> dict:
+    engine, conn, metadata = connect(db_name)
+    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if not table_list:
+        return {"message": "No such post"}
+    if table_list[0][1] != token:
+        return {"message": "Wrong token!"}
+    query = table.delete().where(table.columns.PostID == post_id)
+    conn.execute(query)
+    return {"message": "Deleted post"}
