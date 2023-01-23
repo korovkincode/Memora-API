@@ -20,18 +20,22 @@ def connect(db_name: str):
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(db_name: str, post: dict) -> dict:
+def createPost(db_name: str, post: dict, isFile=False, filename=None) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if not db_users.getUserByToken("Users", post["token"]):
         return {"message": "No such user"}
-    if not post["is_file"]:
+    if not isFile:
         query = db.insert(table).values(UserToken=post["token"], Data=post["data"], IsFile=False)
         conn.execute(query)
         table_list = conn.execute(table.select()).fetchall()
         cur_id = table_list[0][0]
         return {"message": f"/api/post/{cur_id}/read/"}
-    return {"message": "Cannot handle a file yet!"}
+    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
+    conn.execute(query)
+    table_list = conn.execute(table.select()).fetchall()
+    cur_id = table_list[0][0]
+    return {"message": f"static/{filename}"}
 
 def readPost(db_name: str, post_id: int, token: str) -> dict:
     engine, conn, metadata = connect(db_name)
