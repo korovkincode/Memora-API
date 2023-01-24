@@ -56,9 +56,13 @@ def updatePost(db_name: str, post: dict, post_id: int, isFile=False, filename=No
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not table_list:
         return {"message": "No such post"}
-    query = table.delete().where(table.columns.PostID == post_id)
+    if not isFile:
+        query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
+        conn.execute(query)
+        return {"message": "Updated post"}
+    query = table.update().values(Data="File", IsFile=1, Path=f"/static/{filename}").where(table.columns.PostID == post_id)
     conn.execute(query)
-    return createPost(db_name, post, isFile, filename)
+    return {"message": "Updated post"}
 
 def deletePost(db_name: str, post_id: int, token: str) -> dict:
     engine, conn, metadata = connect(db_name)

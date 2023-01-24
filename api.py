@@ -60,6 +60,11 @@ async def read(post_id: int, request: Request) -> dict:
 @app.put("/api/post/{post_id}/update/")
 async def update(post_id: int, post_json: Post) -> dict:
     post = post_json.dict()
+    for filename in os.listdir("static"):
+        curName = filename[:filename.index(".")]
+        if int(curName) == post_id:
+            os.remove(f"static/{filename}")
+            break
     return db_posts.updatePost("Posts", post, post_id)
 
 @app.put("/api/post/{post_id}/update/file/")
