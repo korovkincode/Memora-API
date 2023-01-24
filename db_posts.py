@@ -31,11 +31,11 @@ def createPost(db_name: str, post: dict, isFile=False, filename=None) -> dict:
         table_list = conn.execute(table.select()).fetchall()
         cur_id = table_list[0][0]
         return {"message": f"/api/post/{cur_id}/read/"}
-    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
+    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"/static/{filename}")
     conn.execute(query)
     table_list = conn.execute(table.select()).fetchall()
     cur_id = table_list[0][0]
-    return {"message": f"static/{filename}"}
+    return {"message": f"/static/{filename}"}
 
 def readPost(db_name: str, post_id: int, token: str) -> dict:
     engine, conn, metadata = connect(db_name)
@@ -46,11 +46,11 @@ def readPost(db_name: str, post_id: int, token: str) -> dict:
         return {"message": "No such post"}
     if table_list[0][1] != token:
         return {"message": "Wrong token!"}
-    if table_list[0][3] == True:
-        return {"message": "Cannot handle a file yet!"}
+    if table_list[0][3]:
+        return {"message": table_list[0][4]}
     return {"message": table_list[0][2]}
 
-def updatePost(db_name: str, post: dict, post_id: int) -> dict:
+def updatePost(db_name: str, post: dict, post_id: int, isFile=False, filename=None) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -58,7 +58,7 @@ def updatePost(db_name: str, post: dict, post_id: int) -> dict:
         return {"message": "No such post"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
-    return createPost(db_name, post)
+    return createPost(db_name, post, isFile, filename)
 
 def deletePost(db_name: str, post_id: int, token: str) -> dict:
     engine, conn, metadata = connect(db_name)
@@ -71,3 +71,8 @@ def deletePost(db_name: str, post_id: int, token: str) -> dict:
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
     return {"message": "Deleted post"}
+
+def getNumberOfPosts(db_name: str) -> int:
+    engine, conn, metadata = connect(db_name)
+    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+    return len(conn.execute(table.select()).fetchall())
