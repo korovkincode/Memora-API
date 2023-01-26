@@ -1,5 +1,6 @@
 import sqlalchemy as db
 import db_users, os
+from typing import Union
 
 def setup(db_name: str) -> None:
     engine, conn, metadata = connect(db_name)
@@ -20,7 +21,7 @@ def connect(db_name: str):
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(db_name: str, post: dict, isFile=False, filename=None) -> dict:
+def createPost(db_name: str, post: dict, file=None, isFile=False) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if not db_users.getUserByToken("Users", post["token"]):
@@ -31,13 +32,14 @@ def createPost(db_name: str, post: dict, isFile=False, filename=None) -> dict:
         table_list = conn.execute(table.select()).fetchall()
         cur_id = table_list[0][0]
         return {"message": f"/api/post/{cur_id}/read/"}
+    filename = createFile(file)
     query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"/static/{filename}")
     conn.execute(query)
     table_list = conn.execute(table.select()).fetchall()
     cur_id = table_list[0][0]
     return {"message": f"/static/{filename}"}
 
-def readPost(db_name: str, post_id: int, token: str) -> dict:
+def readPost(db_name: str, post_id: int, token: Union[str,None]) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -74,14 +76,24 @@ def deletePost(db_name: str, post_id: int, token: str) -> dict:
         return {"message": "Wrong token!"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
-    for filename in os.listdir("static"):
-        curName = filename[:filename.index(".")]
-        if int(curName) == post_id:
-            os.remove(f"static/{filename}")
-            break
+    delFile(post_id)
     return {"message": "Deleted post"}
 
 def getNumberOfPosts(db_name: str) -> int:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     return len(conn.execute(table.select()).fetchall())
+
+def delFile(name: int):
+    for filename in os.listdir("static"):
+        curName = filename[:filename.index(".")]
+        if int(curName) == name:
+            os.remove(f"static/{filename}")
+            return 1
+
+def createFile(file):
+    name = getNumberOfPosts("Posts") + 1
+    filename = f"{name}.{file.filename[file.filename.index('.') + 1:]}"
+    with open(f"static/{filename}", "wb") as f:
+        f.write(file.file.read())
+    return filename

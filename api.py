@@ -46,11 +46,11 @@ async def create(post_json: Post) -> dict:
 @app.post("/api/post/create/file/")
 async def createFile(token: str = Form(...), file: UploadFile = File(...)) -> dict:
     #token = request.headers.get('token')
-    name = db_posts.getNumberOfPosts("Posts") + 1
+    '''name = db_posts.getNumberOfPosts("Posts") + 1
     filename = f"{name}.{file.filename[file.filename.index('.') + 1:]}"
     with open(f"static/{filename}", "wb") as f:
-        f.write(file.file.read())
-    return db_posts.createPost("Posts", {"token": token}, isFile=True, filename=filename)
+        f.write(file.file.read())'''
+    return db_posts.createPost("Posts", {"token": token}, file, isFile=True)
 
 @app.get("/api/post/{post_id}/read/")
 async def read(post_id: int, request: Request) -> dict:
