@@ -26,7 +26,7 @@ class Token(BaseModel):
 
 @app.get("/api/")
 async def root() -> dict:
-    return {"message": "Hello, World!"}
+    return {"message": "API for Memora with Python + FastAPI -> https://github.com/korovkincode/Memora-API"}
 
 @app.post("/api/signup/")
 async def signup(user_json: User) -> dict:

@@ -1,5 +1,5 @@
 import sqlalchemy as db
-import db_users
+import db_users, os
 
 def setup(db_name: str) -> None:
     engine, conn, metadata = connect(db_name)
@@ -74,6 +74,11 @@ def deletePost(db_name: str, post_id: int, token: str) -> dict:
         return {"message": "Wrong token!"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
+    for filename in os.listdir("static"):
+        curName = filename[:filename.index(".")]
+        if int(curName) == post_id:
+            os.remove(f"static/{filename}")
+            break
     return {"message": "Deleted post"}
 
 def getNumberOfPosts(db_name: str) -> int:
