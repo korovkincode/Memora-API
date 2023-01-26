@@ -52,16 +52,18 @@ def readPost(db_name: str, post_id: int, token: Union[str,None]) -> dict:
         return {"message": table_list[0][4]}
     return {"message": table_list[0][2]}
 
-def updatePost(db_name: str, post: dict, post_id: int, isFile=False, filename=None) -> dict:
+def updatePost(db_name: str, post: dict, post_id: int, file=None, isFile=False) -> dict:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not table_list:
         return {"message": "No such post"}
+    delFile(post_id)
     if not isFile:
         query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
         conn.execute(query)
         return {"message": "Updated post"}
+    filename = createFile(file, post_id)
     query = table.update().values(Data="File", IsFile=1, Path=f"/static/{filename}").where(table.columns.PostID == post_id)
     conn.execute(query)
     return {"message": "Updated post"}
@@ -84,15 +86,18 @@ def getNumberOfPosts(db_name: str) -> int:
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     return len(conn.execute(table.select()).fetchall())
 
-def delFile(name: int):
+def delFile(name: int) -> Union[int,None]:
     for filename in os.listdir("static"):
         curName = filename[:filename.index(".")]
         if int(curName) == name:
             os.remove(f"static/{filename}")
             return 1
 
-def createFile(file):
-    name = getNumberOfPosts("Posts") + 1
+def createFile(file, post_id=None) -> str:
+    if post_id is not None:
+        name = post_id
+    else:
+        name = getNumberOfPosts("Posts") + 1
     filename = f"{name}.{file.filename[file.filename.index('.') + 1:]}"
     with open(f"static/{filename}", "wb") as f:
         f.write(file.file.read())
