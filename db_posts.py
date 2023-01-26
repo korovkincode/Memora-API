@@ -58,6 +58,8 @@ def updatePost(db_name: str, post: dict, post_id: int, file=None, isFile=False) 
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not table_list:
         return {"message": "No such post"}
+    if table_list[0][1] != post["token"]:
+        return {"message": "Wrong token!"}
     delFile(post_id)
     if not isFile:
         query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
