@@ -1,6 +1,7 @@
 import sqlalchemy as db
 import db_users, os
 from typing import Union
+from fastapi.responses import FileResponse
 
 def setup(db_name: str) -> None:
     engine, conn, metadata = connect(db_name)
@@ -33,13 +34,13 @@ def createPost(db_name: str, post: dict, file=None, isFile=False) -> dict:
         cur_id = table_list[0][0]
         return {"message": f"/api/post/{cur_id}/read/"}
     filename = createFile(file)
-    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"/static/{filename}")
+    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
     conn.execute(query)
     table_list = conn.execute(table.select()).fetchall()
     cur_id = table_list[0][0]
     return {"message": f"/static/{filename}"}
 
-def readPost(db_name: str, post_id: int, token: Union[str,None]) -> dict:
+def readPost(db_name: str, post_id: int, token: Union[str,None]) -> Union[FileResponse,dict]:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -49,7 +50,7 @@ def readPost(db_name: str, post_id: int, token: Union[str,None]) -> dict:
     if table_list[0][1] != token:
         return {"message": "Wrong token!"}
     if table_list[0][3]:
-        return {"message": table_list[0][4]}
+        return FileResponse(table_list[0][4])
     return {"message": table_list[0][2]}
 
 def updatePost(db_name: str, post: dict, post_id: int, file=None, isFile=False) -> dict:

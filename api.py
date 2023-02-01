@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import db_users, db_posts
-import os
+from typing import Union
 
 #TOKEN -> 7c927a25f9
 
@@ -58,7 +59,7 @@ async def createFile(token: str = Form(...), file: UploadFile = File(...)) -> di
     return db_posts.createPost("Posts", {"token": token}, file, isFile=True)
 
 @app.get("/api/post/{post_id}/read/")
-async def read(post_id: int, request: Request) -> dict:
+async def read(post_id: int, request: Request) -> Union[FileResponse,dict]:
     token = request.headers.get("token")
     return db_posts.readPost("Posts", post_id, token)
 
