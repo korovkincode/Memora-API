@@ -9,6 +9,11 @@ def setup(db_name: str) -> None:
         db.Column("UserID", db.Integer(), primary_key=True),
         db.Column("Username", db.String(50), nullable=False),
         db.Column("Password", db.String(150), nullable=False),
+        db.Column("Name", db.String(50), nullable=False),
+        db.Column("Surname", db.String(50), nullable=False),
+        db.Column("Email", db.String(60), nullable=False),
+        db.Column("Gender", db.String(20), nullable=False),
+        db.Column("BirthDate", db.String(20), nullable=False),
         db.Column("Token", db.String(10), nullable=False)
     )
     metadata.create_all(engine)
@@ -24,7 +29,9 @@ def add(db_name: str, user: dict) -> dict:
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     if conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall():
         return {"message": "User with this username already exists"}
-    query = db.insert(table).values(Username=user["username"], Password=user["password"], Token=secrets.token_hex(5))
+    query = db.insert(table).values(Username=user["username"], Password=user["password"], Name=user["name"],
+    Surname=user["surname"], Email=user["email"], Gender=user["gender"],
+    BirthDate=user["birthdate"], Token=secrets.token_hex(5))
     conn.execute(query)
     return {"message": "Add new user"}
 
@@ -33,10 +40,10 @@ def auth(db_name: str, user: dict) -> dict:
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall()
     if table_list[0][2] == user["password"]:
-        return {"message": table_list[0][3]}
+        return {"message": table_list[0][-1]}
     return {"message": "No such user"}
 
-def getUserByToken(db_name: str, token: str) -> bool:
+def getUserByToken(db_name: str, token: str) -> int:
     engine, conn, metadata = connect(db_name)
     table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Token == token)).fetchall()

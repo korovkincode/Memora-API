@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import db_users, db_posts
 import os
 
-#TOKEN -> b5eed51d8b
+#TOKEN -> 7c927a25f9
 
 db_users.setup("Users")
 db_posts.setup("Posts")
@@ -13,7 +13,16 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-class User(BaseModel):
+class UserRegister(BaseModel):
+    username: str
+    password: str
+    name: str
+    surname: str
+    email: str
+    gender: str
+    birthdate: str
+
+class UserAuth(BaseModel):
     username: str
     password: str
 
@@ -29,12 +38,12 @@ async def root() -> dict:
     return {"message": "API for Memora with Python + FastAPI -> https://github.com/korovkincode/Memora-API"}
 
 @app.post("/api/signup/")
-async def signup(user_json: User) -> dict:
+async def signup(user_json: UserRegister) -> dict:
     user = user_json.dict()
     return db_users.add("Users", user)
 
 @app.post("/api/login/")
-async def login(user_json: User) -> dict:
+async def login(user_json: UserAuth) -> dict:
     user = user_json.dict()
     return db_users.auth("Users", user)
 
