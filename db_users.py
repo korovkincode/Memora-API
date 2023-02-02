@@ -1,11 +1,14 @@
 import sqlalchemy as db
 import secrets
 
-def setup(db_name: str) -> None:
-    engine, conn, metadata = connect(db_name)
+USERS_NAME = "Users"
+POSTS_NAME = "Posts"
+
+def setup() -> None:
+    engine, conn, metadata = connect()
 
     users = db.Table(
-        db_name.capitalize(), metadata,
+        USERS_NAME, metadata,
         db.Column("UserID", db.Integer(), primary_key=True),
         db.Column("Username", db.String(50), nullable=False),
         db.Column("Password", db.String(150), nullable=False),
@@ -18,15 +21,15 @@ def setup(db_name: str) -> None:
     )
     metadata.create_all(engine)
 
-def connect(db_name: str):
-    engine = db.create_engine(f"sqlite:///db/{db_name}.sqlite")
+def connect():
+    engine = db.create_engine(f"sqlite:///db/{USERS_NAME}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def add(db_name: str, user: dict) -> dict:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def add(user: dict) -> dict:
+    engine, conn, metadata = connect()
+    table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     if conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall():
         return {"message": "User with this username already exists"}
     query = db.insert(table).values(Username=user["username"], Password=user["password"], Name=user["name"],
@@ -35,17 +38,17 @@ def add(db_name: str, user: dict) -> dict:
     conn.execute(query)
     return {"message": "Add new user"}
 
-def auth(db_name: str, user: dict) -> dict:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def auth(user: dict) -> dict:
+    engine, conn, metadata = connect()
+    table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall()
-    if table_list[0][2] == user["password"]:
+    if len(table_list) and table_list[0][2] == user["password"]:
         return {"message": table_list[0][-1]}
     return {"message": "No such user"}
 
-def getUserByToken(db_name: str, token: str) -> int:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def getUserByToken(token: str) -> int:
+    engine, conn, metadata = connect()
+    table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Token == token)).fetchall()
     if table_list:
         return 1

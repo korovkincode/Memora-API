@@ -3,11 +3,14 @@ import db_users, os
 from typing import Union
 from fastapi.responses import FileResponse
 
-def setup(db_name: str) -> None:
-    engine, conn, metadata = connect(db_name)
+USERS_NAME = "Users"
+POSTS_NAME = "Posts"
+
+def setup() -> None:
+    engine, conn, metadata = connect()
 
     posts = db.Table(
-        db_name.capitalize(), metadata,
+        POSTS_NAME, metadata,
         db.Column("PostID", db.Integer(), primary_key=True),
         db.Column("UserToken", db.String(10), nullable=False),
         db.Column("Data", db.String(), nullable=False),
@@ -16,22 +19,22 @@ def setup(db_name: str) -> None:
     )
     metadata.create_all(engine)
 
-def connect(db_name: str):
-    engine = db.create_engine(f"sqlite:///db/{db_name}.sqlite")
+def connect():
+    engine = db.create_engine(f"sqlite:///db/{POSTS_NAME}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(db_name: str, post: dict, file=None, isFile=False) -> dict:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
-    if not db_users.getUserByToken("Users", post["token"]):
+def createPost(post: dict, file=None, isFile=False) -> dict:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
+    if not db_users.getUserByToken(post["token"]):
         return {"message": "No such user"}
     if not isFile:
         query = db.insert(table).values(UserToken=post["token"], Data=post["data"], IsFile=False)
         conn.execute(query)
         table_list = conn.execute(table.select()).fetchall()
-        cur_id = table_list[0][0]
+        cur_id = table_list[-1][0]
         return {"message": f"/api/post/{cur_id}/read/"}
     filename = createFile(file)
     query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
@@ -40,11 +43,10 @@ def createPost(db_name: str, post: dict, file=None, isFile=False) -> dict:
     cur_id = table_list[0][0]
     return {"message": f"/static/{filename}"}
 
-def readPost(db_name: str, post_id: int, token: Union[str,None]) -> Union[FileResponse,dict]:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def readPost(post_id: int, token: Union[str, None]) -> Union[FileResponse, dict]:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
-    #print(table_list, post_id, type(post_id))
     if not table_list:
         return {"message": "No such post"}
     if table_list[0][1] != token:
@@ -53,9 +55,9 @@ def readPost(db_name: str, post_id: int, token: Union[str,None]) -> Union[FileRe
         return FileResponse(table_list[0][4])
     return {"message": table_list[0][2]}
 
-def updatePost(db_name: str, post: dict, post_id: int, file=None, isFile=False) -> dict:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not table_list:
         return {"message": "No such post"}
@@ -71,9 +73,9 @@ def updatePost(db_name: str, post: dict, post_id: int, file=None, isFile=False) 
     conn.execute(query)
     return {"message": "Updated post"}
 
-def deletePost(db_name: str, post_id: int, token: str) -> dict:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def deletePost(post_id: int, token: str) -> dict:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not table_list:
         return {"message": "No such post"}
@@ -84,12 +86,12 @@ def deletePost(db_name: str, post_id: int, token: str) -> dict:
     delFile(post_id)
     return {"message": "Deleted post"}
 
-def getNumberOfPosts(db_name: str) -> int:
-    engine, conn, metadata = connect(db_name)
-    table = db.Table(db_name.capitalize(), metadata, autoload=True, autoload_with=engine)
+def getNumberOfPosts() -> int:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     return len(conn.execute(table.select()).fetchall())
 
-def delFile(name: int) -> Union[int,None]:
+def delFile(name: int) -> Union[int, None]:
     for filename in os.listdir("static"):
         curName = filename[:filename.index(".")]
         if int(curName) == name:
@@ -100,7 +102,7 @@ def createFile(file, post_id=None) -> str:
     if post_id is not None:
         name = post_id
     else:
-        name = getNumberOfPosts("Posts") + 1
+        name = getNumberOfPosts() + 1
     filename = f"{name}.{file.filename[file.filename.index('.') + 1:]}"
     with open(f"static/{filename}", "wb") as f:
         f.write(file.file.read())
