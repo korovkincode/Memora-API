@@ -3,7 +3,6 @@ import db_users, os
 from typing import Union
 from fastapi.responses import FileResponse
 
-USERS_NAME = "Users"
 POSTS_NAME = "Posts"
 
 def setup() -> None:
@@ -73,7 +72,7 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
     conn.execute(query)
     return {"message": "Updated post"}
 
-def deletePost(post_id: int, token: str) -> dict:
+def deletePost(post_id: int, token: Union[str, None]) -> dict:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()

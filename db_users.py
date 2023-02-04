@@ -2,7 +2,6 @@ import sqlalchemy as db
 import secrets
 
 USERS_NAME = "Users"
-POSTS_NAME = "Posts"
 
 def setup() -> None:
     engine, conn, metadata = connect()

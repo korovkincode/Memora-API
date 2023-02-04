@@ -7,9 +7,6 @@ from typing import Union
 
 #TOKEN -> 7c927a25f9
 
-USERS_NAME = "Users"
-POSTS_NAME = "POSTS"
-
 db_users.setup()
 db_posts.setup()
 
@@ -31,11 +28,8 @@ class UserAuth(BaseModel):
     password: str
 
 class Post(BaseModel):
-    token: str
     data: str
 
-class Token(BaseModel):
-    token: str
 
 @app.get("/api/")
 async def root() -> dict:
@@ -52,30 +46,35 @@ async def login(user_json: UserAuth) -> dict:
     return db_users.auth(user)
 
 @app.post("/api/post/create/")
-async def create(post_json: Post) -> dict:
+async def create(request: Request, post_json: Post) -> dict:
     post = post_json.dict()
+    token = request.headers.get("token")
+    post["token"] = token
     return db_posts.createPost(post)
 
 @app.post("/api/post/create/file/")
-async def createFile(token: str = Form(...), file: UploadFile = File(...)) -> dict:
-    #token = request.headers.get('token')
+async def createFile(request: Request, file: UploadFile = File(...)) -> dict:
+    token = request.headers.get('token')
     return db_posts.createPost({"token": token}, file, isFile=True)
 
 @app.get("/api/post/{post_id}/read/")
-async def read(post_id: int, request: Request) -> Union[FileResponse, dict]:
+async def read(request: Request, post_id: int) -> Union[FileResponse, dict]:
     token = request.headers.get("token")
     return db_posts.readPost(post_id, token)
 
 @app.put("/api/post/{post_id}/update/")
-async def update(post_id: int, post_json: Post) -> dict:
+async def update(request: Request, post_id: int, post_json: Post) -> dict:
     post = post_json.dict()
+    token = request.headers.get('token')
+    post["token"] = token
     return db_posts.updatePost(post, post_id)
 
 @app.put("/api/post/{post_id}/update/file/")
-async def updateFile(post_id: int, token: str = Form(...), file: UploadFile = File(...)) -> dict:
+async def updateFile(request: Request, post_id: int, file: UploadFile = File(...)) -> dict:
+    token = request.headers.get("token")
     return db_posts.updatePost({"token": token}, post_id, file, isFile=True)
 
 @app.delete("/api/post/{post_id}/delete/")
-async def delete(post_id: int, token_json: Token) -> dict:
-    token = token_json.dict()["token"]
+async def delete(request: Request, post_id: int) -> dict:
+    token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
