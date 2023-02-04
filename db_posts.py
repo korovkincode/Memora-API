@@ -2,6 +2,8 @@ import sqlalchemy as db
 import db_users, os
 from typing import Union
 from fastapi.responses import FileResponse
+from sqlalchemy.engine.base import Engine, Connection
+from sqlalchemy.sql.schema import MetaData
 
 POSTS_NAME = "Posts"
 
@@ -18,7 +20,7 @@ def setup() -> None:
     )
     metadata.create_all(engine)
 
-def connect():
+def connect() -> tuple[Engine, Connection, MetaData]:
     engine = db.create_engine(f"sqlite:///db/{POSTS_NAME}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()

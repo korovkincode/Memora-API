@@ -1,5 +1,7 @@
 import sqlalchemy as db
 import secrets
+from sqlalchemy.engine.base import Engine, Connection
+from sqlalchemy.sql.schema import MetaData
 
 USERS_NAME = "Users"
 
@@ -20,7 +22,7 @@ def setup() -> None:
     )
     metadata.create_all(engine)
 
-def connect():
+def connect() -> tuple[Engine, Connection, MetaData]:
     engine = db.create_engine(f"sqlite:///db/{USERS_NAME}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()

@@ -2,13 +2,14 @@ from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import db_users, db_posts
+import db_users, db_posts, db_tags
 from typing import Union
 
 #TOKEN -> 7c927a25f9
 
 db_users.setup()
 db_posts.setup()
+db_tags.setup()
 
 app = FastAPI()
 
