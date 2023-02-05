@@ -13,7 +13,7 @@ db_tags.setup()
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class UserRegister(BaseModel):
     username: str
@@ -31,6 +31,8 @@ class UserAuth(BaseModel):
 class Post(BaseModel):
     data: str
 
+class Tags(BaseModel):
+    tags: list[str]
 
 @app.get("/api/")
 async def root() -> dict:
@@ -47,35 +49,41 @@ async def login(user_json: UserAuth) -> dict:
     return db_users.auth(user)
 
 @app.post("/api/post/create/")
-async def create(request: Request, post_json: Post) -> dict:
+async def createPost(request: Request, post_json: Post) -> dict:
     post = post_json.dict()
     token = request.headers.get("token")
     post["token"] = token
     return db_posts.createPost(post)
 
 @app.post("/api/post/create/file/")
-async def createFile(request: Request, file: UploadFile = File(...)) -> dict:
+async def createPostFile(request: Request, file: UploadFile = File(...)) -> dict:
     token = request.headers.get('token')
     return db_posts.createPost({"token": token}, file, isFile=True)
 
 @app.get("/api/post/{post_id}/read/")
-async def read(request: Request, post_id: int) -> Union[FileResponse, dict]:
+async def readPost(request: Request, post_id: int) -> Union[FileResponse, dict]:
     token = request.headers.get("token")
     return db_posts.readPost(post_id, token)
 
 @app.put("/api/post/{post_id}/update/")
-async def update(request: Request, post_id: int, post_json: Post) -> dict:
+async def updatePost(request: Request, post_id: int, post_json: Post) -> dict:
     post = post_json.dict()
     token = request.headers.get('token')
     post["token"] = token
     return db_posts.updatePost(post, post_id)
 
 @app.put("/api/post/{post_id}/update/file/")
-async def updateFile(request: Request, post_id: int, file: UploadFile = File(...)) -> dict:
+async def updatePostFile(request: Request, post_id: int, file: UploadFile = File(...)) -> dict:
     token = request.headers.get("token")
     return db_posts.updatePost({"token": token}, post_id, file, isFile=True)
 
 @app.delete("/api/post/{post_id}/delete/")
-async def delete(request: Request, post_id: int) -> dict:
+async def deletePost(request: Request, post_id: int) -> dict:
     token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
+
+@app.post("/api/post/{post_id}/tags/add")
+async def createPostTags(request: Request, tags_json: Tags, post_id: int) -> dict:
+    token = request.headers.get("token")
+    tags = tags_json.dict()
+    return db_tags.createPostTags(post_id, token, tags)

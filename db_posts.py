@@ -27,60 +27,60 @@ def connect() -> tuple[Engine, Connection, MetaData]:
     return engine, conn, metadata
 
 def createPost(post: dict, file=None, isFile=False) -> dict:
-    engine, conn, metadata = connect()
-    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     if not db_users.getUserByToken(post["token"]):
         return {"message": "No such user"}
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     if not isFile:
         query = db.insert(table).values(UserToken=post["token"], Data=post["data"], IsFile=False)
         conn.execute(query)
-        table_list = conn.execute(table.select()).fetchall()
-        cur_id = table_list[-1][0]
+        tableL = conn.execute(table.select()).fetchall()
+        cur_id = tableL[-1][0]
         return {"message": f"/api/post/{cur_id}/read/"}
     filename = createFile(file)
     query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
     conn.execute(query)
-    table_list = conn.execute(table.select()).fetchall()
-    cur_id = table_list[0][0]
-    return {"message": f"/static/{filename}"}
+    tableL = conn.execute(table.select()).fetchall()
+    cur_id = tableL[0][0]
+    return {"message": f"/api/post/{cur_id}/read/"}
 
 def readPost(post_id: int, token: Union[str, None]) -> Union[FileResponse, dict]:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
-    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
-    if not table_list:
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if not tableL:
         return {"message": "No such post"}
-    if table_list[0][1] != token:
+    if tableL[0][1] != token:
         return {"message": "Wrong token!"}
-    if table_list[0][3]:
-        return FileResponse(table_list[0][4])
-    return {"message": table_list[0][2]}
+    if tableL[0][3]:
+        return FileResponse(tableL[0][4])
+    return {"message": tableL[0][2]}
 
 def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
-    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
-    if not table_list:
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if not tableL:
         return {"message": "No such post"}
-    if table_list[0][1] != post["token"]:
+    if tableL[0][1] != post["token"]:
         return {"message": "Wrong token!"}
     delFile(post_id)
     if not isFile:
         query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
         conn.execute(query)
-        return {"message": "Updated post"}
+        return {"message": f"/api/post/{post_id}/read/"}
     filename = createFile(file, post_id)
     query = table.update().values(Data="File", IsFile=1, Path=f"/static/{filename}").where(table.columns.PostID == post_id)
     conn.execute(query)
-    return {"message": "Updated post"}
+    return {"message": f"/api/post/{post_id}/read/"}
 
 def deletePost(post_id: int, token: Union[str, None]) -> dict:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
-    table_list = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
-    if not table_list:
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if not tableL:
         return {"message": "No such post"}
-    if table_list[0][1] != token:
+    if tableL[0][1] != token:
         return {"message": "Wrong token!"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
@@ -91,6 +91,13 @@ def getNumberOfPosts() -> int:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     return len(conn.execute(table.select()).fetchall())
+
+def getTokenByPost(post_id: int) -> Union[str, None]:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if len(tableL):
+        return tableL[0][1]
 
 def delFile(name: int) -> Union[int, None]:
     for filename in os.listdir("static"):
