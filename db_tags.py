@@ -6,10 +6,11 @@ import db_users, db_posts
 
 
 TAGS_NAME = "Tags"
+LINK_NAME = "Link"
 
-def setup() -> None:
+def setupTags() -> None:
 
-    engine, conn, metadata = connect()
+    engine, conn, metadata = connect(TAGS_NAME)
 
     tags = db.Table(
         TAGS_NAME, metadata,
@@ -18,14 +19,25 @@ def setup() -> None:
     )
     metadata.create_all(engine)
 
-def connect() -> tuple[Engine, Connection, MetaData]:
-    engine = db.create_engine(f"sqlite:///db/{TAGS_NAME}.sqlite")
+def setupLink() -> None:
+
+    engine, conn, metadata = connect(LINK_NAME)
+
+    link = db.Table(
+        LINK_NAME, metadata,
+        db.Column("PostID", db.Integer(), nullable=False),
+        db.Column("TagID", db.Integer(), nullable=False)
+    )
+    metadata.create_all(engine)
+
+def connect(NAME: str) -> tuple[Engine, Connection, MetaData]:
+    engine = db.create_engine(f"sqlite:///db/{NAME}.sqlite")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
 
 def createPostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
-    engine, conn, metadata = connect()
+    engine, conn, metadata = connect(TAGS_NAME)
     if token != db_posts.getTokenByPost(post_id):
         return {"message": "Wrong token or post doesn't exist!"}
     table = db.Table(TAGS_NAME, metadata, autoload=True, autoload_with=engine)
@@ -33,12 +45,37 @@ def createPostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
         if getTagID(tag) is None:
             query = db.insert(table).values(Name=tag)
             conn.execute(query)
+        addLink(post_id, getTagID(tag))
     return {"message": "Added tags"}
 
+def readPostTags(post_id: int, token: Union[str, None]) -> dict:
+    engine, conn, metadata = connect(LINK_NAME)
+    if token != db_posts.getTokenByPost(post_id):
+        return {"message": "Wrong token or post doesn't exist!"}
+    table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    tags = []
+    for postid, tag_id in tableL:
+        tags.append(getTagName(tag_id))
+    return {"tags": tags}
 
 def getTagID(tag_name: str) -> Union[int, None]:
-    engine, conn, metadata = connect()
+    engine, conn, metadata = connect(TAGS_NAME)
     table = db.Table(TAGS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.Name == tag_name)).fetchall()
     if len(tableL):
         return tableL[0][0]
+
+def getTagName(tag_id: int) -> Union[str, None]:
+    engine, conn, metadata = connect(TAGS_NAME)
+    table = db.Table(TAGS_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.TagID == tag_id)).fetchall()
+    if len(tableL):
+        return tableL[0][1]
+
+def addLink(post_id: int, tag_id: Union[int, None]) -> None:
+    if tag_id is not None:
+        engine, conn, metadata = connect(LINK_NAME)
+        table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+        query = db.insert(table).values(PostID=post_id, TagID=tag_id)
+        conn.execute(query)

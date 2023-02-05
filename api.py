@@ -9,7 +9,8 @@ from typing import Union
 
 db_users.setup()
 db_posts.setup()
-db_tags.setup()
+db_tags.setupTags()
+db_tags.setupLink()
 
 app = FastAPI()
 
@@ -82,8 +83,13 @@ async def deletePost(request: Request, post_id: int) -> dict:
     token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
 
-@app.post("/api/post/{post_id}/tags/add")
+@app.post("/api/post/{post_id}/tags/add/")
 async def createPostTags(request: Request, tags_json: Tags, post_id: int) -> dict:
     token = request.headers.get("token")
     tags = tags_json.dict()
     return db_tags.createPostTags(post_id, token, tags)
+
+@app.get("/api/post/{post_id}/tags/")
+async def readPostTags(request: Request, post_id: int) -> dict:
+    token = request.headers.get("token")
+    return db_tags.readPostTags(post_id, token)
