@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import db_users, db_posts, db_tags
 from typing import Union
 
-#TOKEN -> 7c927a25f9
+#TOKEN -> 4b295759a4
 
 db_users.setup()
 db_posts.setup()
@@ -48,6 +48,11 @@ async def signup(user_json: UserRegister) -> dict:
 async def login(user_json: UserAuth) -> dict:
     user = user_json.dict()
     return db_users.auth(user)
+
+@app.post("/api/user/pfp/set")
+async def setPfp(request: Request, file: UploadFile = File(...)) -> dict:
+    token = request.headers.get("token")
+    return db_users.setPfp(token, file)
 
 @app.post("/api/post/create/")
 async def createPost(request: Request, post_json: Post) -> dict:

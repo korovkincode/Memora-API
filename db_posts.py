@@ -36,13 +36,13 @@ def createPost(post: dict, file=None, isFile=False) -> dict:
         conn.execute(query)
         tableL = conn.execute(table.select()).fetchall()
         cur_id = tableL[-1][0]
-        return {"message": f"/api/post/{cur_id}/read/"}
+        return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
     filename = createFile(file)
     query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
     conn.execute(query)
     tableL = conn.execute(table.select()).fetchall()
     cur_id = tableL[0][0]
-    return {"message": f"/api/post/{cur_id}/read/"}
+    return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
 
 def readPost(post_id: int, token: Union[str, None]) -> Union[FileResponse, dict]:
     engine, conn, metadata = connect()

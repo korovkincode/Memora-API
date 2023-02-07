@@ -1,5 +1,7 @@
+from fastapi import File, UploadFile
 import sqlalchemy as db
-import secrets
+import secrets, os
+from typing import Union
 from sqlalchemy.engine.base import Engine, Connection
 from sqlalchemy.sql.schema import MetaData
 
@@ -18,7 +20,8 @@ def setup() -> None:
         db.Column("Email", db.String(60), nullable=False),
         db.Column("Gender", db.String(20), nullable=False),
         db.Column("BirthDate", db.String(20), nullable=False),
-        db.Column("Token", db.String(10), nullable=False)
+        db.Column("Token", db.String(10), nullable=False),
+        db.Column("PicturePath", db.String(30))
     )
     metadata.create_all(engine)
 
@@ -44,8 +47,18 @@ def auth(user: dict) -> dict:
     table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall()
     if len(table_list) and table_list[0][2] == user["password"]:
-        return {"message": table_list[0][-1]}
+        return {"message": table_list[0][-2]}
     return {"message": "No such user"}
+
+def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
+    if token is None:
+        return {"message": "No token!"}
+    engine, conn, metadata = connect()
+    table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
+    filename = createFile(token, file)
+    query = table.update().values(PicturePath=f"/pfp/{filename}").where(table.columns.Token == token)
+    conn.execute(query)
+    return {"message": "Set pfp"}
 
 def getUserByToken(token: str) -> int:
     engine, conn, metadata = connect()
@@ -54,3 +67,16 @@ def getUserByToken(token: str) -> int:
     if table_list:
         return 1
     return 0
+
+def delFile(name: str) -> Union[int, None]:
+    for filename in os.listdir("pfp"):
+        curName = filename[:filename.index(".")]
+        if curName == name:
+            os.remove(f"pfp/{filename}")
+            return 1
+
+def createFile(token: str, file: UploadFile = File(...)) -> str:
+    filename = f"{token}.{file.filename[file.filename.index('.') + 1:]}"
+    with open(f"pfp/{filename}", "wb") as f:
+        f.write(file.file.read())
+    return filename
