@@ -54,6 +54,11 @@ async def setPfp(request: Request, file: UploadFile = File(...)) -> dict:
     token = request.headers.get("token")
     return db_users.setPfp(token, file)
 
+@app.delete("/api/user/pfp/delete")
+async def deletePfp(request: Request):
+    token = request.headers.get("token")
+    return db_users.deletePfp(token)
+
 @app.post("/api/post/create/")
 async def createPost(request: Request, post_json: Post) -> dict:
     post = post_json.dict()

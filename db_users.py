@@ -55,10 +55,20 @@ def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
         return {"message": "No token!"}
     engine, conn, metadata = connect()
     table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
-    filename = createFile(token, file)
+    filename = createFilePfp(token, file)
     query = table.update().values(PicturePath=f"/pfp/{filename}").where(table.columns.Token == token)
     conn.execute(query)
     return {"message": "Set pfp"}
+
+def deletePfp(token: Union[str, None]) -> dict:
+    if token is None:
+        return {"message": "No token!"}
+    engine, conn, metadata = connect()
+    table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
+    query = table.update().values(PicturePath=None).where(table.columns.Token == token)
+    conn.execute(query)
+    delFilePfp(token)
+    return {"message": "Delete pfp"}
 
 def getUserByToken(token: str) -> int:
     engine, conn, metadata = connect()
@@ -68,14 +78,14 @@ def getUserByToken(token: str) -> int:
         return 1
     return 0
 
-def delFile(name: str) -> Union[int, None]:
+def delFilePfp(name: str) -> Union[int, None]:
     for filename in os.listdir("pfp"):
         curName = filename[:filename.index(".")]
         if curName == name:
             os.remove(f"pfp/{filename}")
             return 1
 
-def createFile(token: str, file: UploadFile = File(...)) -> str:
+def createFilePfp(token: str, file: UploadFile = File(...)) -> str:
     filename = f"{token}.{file.filename[file.filename.index('.') + 1:]}"
     with open(f"pfp/{filename}", "wb") as f:
         f.write(file.file.read())
