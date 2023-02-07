@@ -1,4 +1,5 @@
 from fastapi import File, UploadFile
+from fastapi.responses import FileResponse
 import sqlalchemy as db
 import secrets, os
 from typing import Union
@@ -49,6 +50,15 @@ def auth(user: dict) -> dict:
     if len(table_list) and table_list[0][2] == user["password"]:
         return {"message": table_list[0][-2]}
     return {"message": "No such user"}
+
+def viewPfp(token: Union[str, None]) -> Union[FileResponse, dict]:
+    if token is None:
+        return {"message": "No token!"}
+    for filename in os.listdir("pfp"):
+        curName = filename[:filename.index(".")]
+        if curName == token:
+            return FileResponse(f"pfp/{filename}")
+    return {"message": "No pfp for this token!"}
 
 def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
     if token is None:

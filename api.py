@@ -49,13 +49,18 @@ async def login(user_json: UserAuth) -> dict:
     user = user_json.dict()
     return db_users.auth(user)
 
+@app.get("/api/user/pfp/")
+async def viewPfp(request: Request) -> Union[FileResponse, dict]:
+    token = request.headers.get("token")
+    return db_users.viewPfp(token)
+
 @app.post("/api/user/pfp/set")
 async def setPfp(request: Request, file: UploadFile = File(...)) -> dict:
     token = request.headers.get("token")
     return db_users.setPfp(token, file)
 
 @app.delete("/api/user/pfp/delete")
-async def deletePfp(request: Request):
+async def deletePfp(request: Request) -> dict:
     token = request.headers.get("token")
     return db_users.deletePfp(token)
 
