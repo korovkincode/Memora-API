@@ -36,17 +36,18 @@ def connect(NAME: str) -> tuple[Engine, Connection, MetaData]:
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
+def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
     engine, conn, metadata = connect(TAGS_NAME)
     if token != db_posts.getTokenByPost(post_id):
         return {"message": "Wrong token or post doesn't exist!"}
+    clearLinks(post_id)
     table = db.Table(TAGS_NAME, metadata, autoload=True, autoload_with=engine)
     for tag in tags["tags"]:
         if getTagID(tag) is None:
             query = db.insert(table).values(Name=tag)
             conn.execute(query)
         addLink(post_id, getTagID(tag))
-    return {"message": "Added tags"}
+    return {"message": "Updated tags"}
 
 def readPostTags(post_id: int, token: Union[str, None]) -> dict:
     engine, conn, metadata = connect(LINK_NAME)
@@ -79,3 +80,9 @@ def addLink(post_id: int, tag_id: Union[int, None]) -> None:
         table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
         query = db.insert(table).values(PostID=post_id, TagID=tag_id)
         conn.execute(query)
+    
+def clearLinks(post_id: int) -> None:
+    engine, conn, metadata = connect(LINK_NAME)
+    table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+    query = table.delete().where(table.columns.PostID == post_id)
+    conn.execute(query)
