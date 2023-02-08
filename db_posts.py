@@ -45,6 +45,8 @@ def createPost(post: dict, file=None, isFile=False) -> dict:
     return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
 
 def readPost(post_id: int, token: Union[str, None]) -> Union[FileResponse, dict]:
+    if token is None:
+        return {"message": "No token!"}
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -75,6 +77,8 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
     return {"message": f"/api/post/{post_id}/read/"}
 
 def deletePost(post_id: int, token: Union[str, None]) -> dict:
+    if token is None:
+        return {"message": "No token!"}
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()

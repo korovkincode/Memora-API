@@ -37,6 +37,8 @@ def connect(NAME: str) -> tuple[Engine, Connection, MetaData]:
     return engine, conn, metadata
 
 def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
+    if token is None:
+        return {"message": "No token!"}
     engine, conn, metadata = connect(TAGS_NAME)
     if token != db_posts.getTokenByPost(post_id):
         return {"message": "Wrong token or post doesn't exist!"}
@@ -50,6 +52,8 @@ def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
     return {"message": "Updated tags"}
 
 def readPostTags(post_id: int, token: Union[str, None]) -> dict:
+    if token is None:
+        return {"message": "No token!"}
     engine, conn, metadata = connect(LINK_NAME)
     if token != db_posts.getTokenByPost(post_id):
         return {"message": "Wrong token or post doesn't exist!"}
