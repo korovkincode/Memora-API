@@ -1,6 +1,7 @@
 import sqlalchemy as db
 import db_users, os
 from typing import Union
+from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.engine.base import Engine, Connection
 from sqlalchemy.sql.schema import MetaData
@@ -26,9 +27,9 @@ def connect() -> tuple[Engine, Connection, MetaData]:
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(post: dict, file=None, isFile=False) -> dict:
+def createPost(post: dict, file=None, isFile=False) -> Union[HTTPException, dict]:
     if not db_users.getUserByToken(post["token"]):
-        return {"message": "No such user"}
+        return HTTPException(status_code=404, detail="No such user!")
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     if not isFile:
@@ -44,26 +45,26 @@ def createPost(post: dict, file=None, isFile=False) -> dict:
     cur_id = tableL[0][0]
     return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
 
-def readPost(post_id: int, token: Union[str, None]) -> Union[FileResponse, dict]:
+def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not tableL:
-        return {"message": "No such post"}
+        raise HTTPException(status_code=404, detail="No such post!")
     if tableL[0][1] != token:
         return {"message": "Wrong token!"}
     if tableL[0][3]:
         return FileResponse(tableL[0][4])
     return {"message": tableL[0][2]}
 
-def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
+def updatePost(post: dict, post_id: int, file=None, isFile=False) -> Union[HTTPException, dict]:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not tableL:
-        return {"message": "No such post"}
+        raise HTTPException(status_code=404, detail="No such post!")
     if tableL[0][1] != post["token"]:
         return {"message": "Wrong token!"}
     delFile(post_id)
@@ -76,14 +77,14 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> dict:
     conn.execute(query)
     return {"message": f"/api/post/{post_id}/read/"}
 
-def deletePost(post_id: int, token: Union[str, None]) -> dict:
+def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if not tableL:
-        return {"message": "No such post"}
+        raise HTTPException(status_code=404, detail="No such post!")
     if tableL[0][1] != token:
         return {"message": "Wrong token!"}
     query = table.delete().where(table.columns.PostID == post_id)

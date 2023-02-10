@@ -1,4 +1,5 @@
 import sqlalchemy as db
+from fastapi import HTTPException
 from sqlalchemy.engine.base import Engine, Connection
 from sqlalchemy.sql.schema import MetaData
 from typing import Union
@@ -36,12 +37,12 @@ def connect(NAME: str) -> tuple[Engine, Connection, MetaData]:
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
+def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> Union[HTTPException, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect(TAGS_NAME)
     if token != db_posts.getTokenByPost(post_id):
-        return {"message": "Wrong token or post doesn't exist!"}
+        raise HTTPException(status_code=404, detail="Wrong token or post doesn't exist!")
     clearLinks(post_id)
     table = db.Table(TAGS_NAME, metadata, autoload=True, autoload_with=engine)
     for tag in tags["tags"]:
@@ -51,12 +52,12 @@ def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> dict:
         addLink(post_id, getTagID(tag))
     return {"message": "Updated tags"}
 
-def readPostTags(post_id: int, token: Union[str, None]) -> dict:
+def readPostTags(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect(LINK_NAME)
     if token != db_posts.getTokenByPost(post_id):
-        return {"message": "Wrong token or post doesn't exist!"}
+        raise HTTPException(status_code=404, detail="Wrong token or post doesn't exist!")
     table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     tags = []

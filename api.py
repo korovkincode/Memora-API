@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, File, UploadFile, Form
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -45,12 +45,12 @@ async def signup(user_json: UserRegister) -> dict:
     return db_users.add(user)
 
 @app.post("/api/login/")
-async def login(user_json: UserAuth) -> dict:
+async def login(user_json: UserAuth) -> Union[HTTPException, dict]:
     user = user_json.dict()
     return db_users.auth(user)
 
 @app.get("/api/user/pfp/")
-async def viewPfp(request: Request) -> Union[FileResponse, dict]:
+async def viewPfp(request: Request) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
     return db_users.viewPfp(token)
 
@@ -65,46 +65,46 @@ async def deletePfp(request: Request) -> dict:
     return db_users.deletePfp(token)
 
 @app.post("/api/post/create/")
-async def createPost(request: Request, post_json: Post) -> dict:
+async def createPost(request: Request, post_json: Post) -> Union[HTTPException, dict]:
     post = post_json.dict()
     token = request.headers.get("token")
     post["token"] = token
     return db_posts.createPost(post)
 
 @app.post("/api/post/create/file/")
-async def createPostFile(request: Request, file: UploadFile = File(...)) -> dict:
+async def createPostFile(request: Request, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
     token = request.headers.get('token')
     return db_posts.createPost({"token": token}, file, isFile=True)
 
 @app.get("/api/post/{post_id}/read/")
-async def readPost(request: Request, post_id: int) -> Union[FileResponse, dict]:
+async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
     return db_posts.readPost(post_id, token)
 
 @app.put("/api/post/{post_id}/update/")
-async def updatePost(request: Request, post_id: int, post_json: Post) -> dict:
+async def updatePost(request: Request, post_id: int, post_json: Post) -> Union[HTTPException, dict]:
     post = post_json.dict()
     token = request.headers.get('token')
     post["token"] = token
     return db_posts.updatePost(post, post_id)
 
 @app.put("/api/post/{post_id}/update/file/")
-async def updatePostFile(request: Request, post_id: int, file: UploadFile = File(...)) -> dict:
+async def updatePostFile(request: Request, post_id: int, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.updatePost({"token": token}, post_id, file, isFile=True)
 
 @app.delete("/api/post/{post_id}/delete/")
-async def deletePost(request: Request, post_id: int) -> dict:
+async def deletePost(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
 
 @app.post("/api/post/{post_id}/tags/add/")
-async def updatePostTags(request: Request, tags_json: Tags, post_id: int) -> dict:
+async def updatePostTags(request: Request, tags_json: Tags, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     tags = tags_json.dict()
     return db_tags.updatePostTags(post_id, token, tags)
 
 @app.get("/api/post/{post_id}/tags/")
-async def readPostTags(request: Request, post_id: int) -> dict:
+async def readPostTags(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_tags.readPostTags(post_id, token)

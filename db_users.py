@@ -1,4 +1,4 @@
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 import sqlalchemy as db
 import secrets, os
@@ -43,22 +43,22 @@ def add(user: dict) -> dict:
     conn.execute(query)
     return {"message": "Add new user"}
 
-def auth(user: dict) -> dict:
+def auth(user: dict) -> Union[HTTPException, dict]:
     engine, conn, metadata = connect()
     table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     table_list = conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall()
     if len(table_list) and table_list[0][2] == user["password"]:
         return {"message": table_list[0][-2]}
-    return {"message": "No such user"}
+    raise HTTPException(status_code=404, detail="No such user")
 
-def viewPfp(token: Union[str, None]) -> Union[FileResponse, dict]:
+def viewPfp(token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
     if token is None:
         return {"message": "No token!"}
     for filename in os.listdir("pfp"):
         curName = filename[:filename.index(".")]
         if curName == token:
             return FileResponse(f"pfp/{filename}")
-    return {"message": "No pfp for this token!"}
+    raise HTTPException(status_code=404, detail="No pfp for this token!")
 
 def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
     if token is None:
