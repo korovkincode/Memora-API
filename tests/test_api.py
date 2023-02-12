@@ -100,3 +100,37 @@ def test_deletePost():
     response = client.get("/api/post/1/read/", headers={"token": TOKEN})
     assert response.status_code == 404
     assert response.json() == {"detail": "No such post!"}
+
+def test_postTags():
+    response = client.post("/api/post/1/tags/add/")
+    assert response.status_code == 422
+    response = client.post("/api/post/1/tags/add/", json={"tags": ["Photo"]})
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.post("/api/post/1/tags/add/", headers={"token": "1234"}, json={"tags": ["Photo"]})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token or post doesn't exist!"}
+    response = client.post("/api/post/2/tags/add/", headers={"token": TOKEN + "@"}, json={"tags": ["Photo"]})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token or post doesn't exist!"}
+    response = client.post("/api/post/2/tags/add/", headers={"token": TOKEN}, json={"tags": ["Photo"]})
+    assert response.status_code == 200
+    assert response.json() == {"message": "/api/post/2/tags/"}
+    response = client.get("/api/post/1/tags/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.get("/api/post/1/tags/", headers={"token": "1234"})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token or post doesn't exist!"}
+    response = client.get("/api/post/2/tags/", headers={"token": "1234"})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token or post doesn't exist!"}
+    response = client.get("/api/post/2/tags/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json() == {"tags": ["Photo"]}
+    response = client.post("/api/post/2/tags/add/", headers={"token": TOKEN}, json={"tags": ["Note"]})
+    assert response.status_code == 200
+    assert response.json() == {"message": "/api/post/2/tags/"}
+    response = client.get("/api/post/2/tags/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json() == {"tags": ["Note"]}
