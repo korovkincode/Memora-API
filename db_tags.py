@@ -32,7 +32,7 @@ def setupLink() -> None:
     metadata.create_all(engine)
 
 def connect(NAME: str) -> tuple[Engine, Connection, MetaData]:
-    engine = db.create_engine(f"sqlite:///db/{NAME}.sqlite")
+    engine = db.create_engine(f"sqlite:///db/{NAME}.sqlite?check_same_thread=False")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
@@ -50,7 +50,7 @@ def updatePostTags(post_id: int, token: Union[str, None], tags: dict) -> Union[H
             query = db.insert(table).values(Name=tag)
             conn.execute(query)
         addLink(post_id, getTagID(tag))
-    return {"message": "Updated tags"}
+    return {"message": f"/api/post/{post_id}/tags/"}
 
 def readPostTags(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
     if token is None:
@@ -63,6 +63,16 @@ def readPostTags(post_id: int, token: Union[str, None]) -> Union[HTTPException, 
     tags = []
     for postid, tag_id in tableL:
         tags.append(getTagName(tag_id))
+    return {"tags": tags}
+
+def getUserTags(token: Union[str, None]) -> dict:
+    if token is None:
+        return {"message": "No token!"}
+    tags = []
+    for postID in db_posts.postsIDByToken(token):
+        curTags = readPostTags(postID, token)
+        if isinstance(curTags, dict):
+            tags += curTags["tags"]
     return {"tags": tags}
 
 def getTagID(tag_name: str) -> Union[int, None]:

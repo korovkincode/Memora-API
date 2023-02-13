@@ -22,14 +22,14 @@ def setup() -> None:
     metadata.create_all(engine)
 
 def connect() -> tuple[Engine, Connection, MetaData]:
-    engine = db.create_engine(f"sqlite:///db/{POSTS_NAME}.sqlite")
+    engine = db.create_engine(f"sqlite:///db/{POSTS_NAME}.sqlite?check_same_thread=False")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
 
 def createPost(post: dict, file=None, isFile=False) -> Union[HTTPException, dict]:
     if not db_users.getUserByToken(post["token"]):
-        return HTTPException(status_code=404, detail="No such user!")
+        raise HTTPException(status_code=404, detail="No such user!")
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     if not isFile:
@@ -103,6 +103,15 @@ def getTokenByPost(post_id: int) -> Union[str, None]:
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     if len(tableL):
         return tableL[0][1]
+
+def postsIDByToken(token: str) -> list[int]:
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.UserToken == token)).fetchall()
+    IDs = []
+    for post in tableL:
+        IDs.append(post[0])
+    return IDs
 
 def delFile(name: int) -> Union[int, None]:
     for filename in os.listdir("static"):

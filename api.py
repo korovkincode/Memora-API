@@ -54,20 +54,25 @@ async def viewPfp(request: Request) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
     return db_users.viewPfp(token)
 
-@app.post("/api/user/pfp/set")
+@app.post("/api/user/pfp/set/")
 async def setPfp(request: Request, file: UploadFile = File(...)) -> dict:
     token = request.headers.get("token")
     return db_users.setPfp(token, file)
 
-@app.delete("/api/user/pfp/delete")
+@app.delete("/api/user/pfp/delete/")
 async def deletePfp(request: Request) -> dict:
     token = request.headers.get("token")
     return db_users.deletePfp(token)
 
+@app.get("/api/user/tags/")
+async def getUserTags(request: Request) -> dict:
+    token = request.headers.get("token")
+    return db_tags.getUserTags(token)
+
 @app.post("/api/post/create/")
 async def createPost(request: Request, post_json: Post) -> Union[HTTPException, dict]:
-    post = post_json.dict()
     token = request.headers.get("token")
+    post = post_json.dict()
     post["token"] = token
     return db_posts.createPost(post)
 
@@ -83,8 +88,8 @@ async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileR
 
 @app.put("/api/post/{post_id}/update/")
 async def updatePost(request: Request, post_id: int, post_json: Post) -> Union[HTTPException, dict]:
-    post = post_json.dict()
     token = request.headers.get('token')
+    post = post_json.dict()
     post["token"] = token
     return db_posts.updatePost(post, post_id)
 

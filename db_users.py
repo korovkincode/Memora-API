@@ -27,7 +27,7 @@ def setup() -> None:
     metadata.create_all(engine)
 
 def connect() -> tuple[Engine, Connection, MetaData]:
-    engine = db.create_engine(f"sqlite:///db/{USERS_NAME}.sqlite")
+    engine = db.create_engine(f"sqlite:///db/{USERS_NAME}.sqlite?check_same_thread=False")
     conn = engine.connect()
     metadata = db.MetaData()
     return engine, conn, metadata
@@ -49,7 +49,7 @@ def auth(user: dict) -> Union[HTTPException, dict]:
     table_list = conn.execute(table.select().where(table.columns.Username == user["username"])).fetchall()
     if len(table_list) and table_list[0][2] == user["password"]:
         return {"message": table_list[0][-2]}
-    raise HTTPException(status_code=404, detail="No such user")
+    raise HTTPException(status_code=404, detail="No such user!")
 
 def viewPfp(token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
     if token is None:
