@@ -37,13 +37,13 @@ def createPost(post: dict, file=None, isFile=False) -> Union[HTTPException, dict
         conn.execute(query)
         tableL = conn.execute(table.select()).fetchall()
         cur_id = tableL[-1][0]
-        return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
+        return {"message": f"/api/post/{getNumberOfPosts()}/"}
     filename = createFile(file)
     query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
     conn.execute(query)
     tableL = conn.execute(table.select()).fetchall()
     cur_id = tableL[0][0]
-    return {"message": f"/api/post/{getNumberOfPosts()}/read/"}
+    return {"message": f"/api/post/{getNumberOfPosts()}/"}
 
 def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
     if token is None:
@@ -71,11 +71,11 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> Union[HTTPE
     if not isFile:
         query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
         conn.execute(query)
-        return {"message": f"/api/post/{post_id}/read/"}
+        return {"message": f"/api/post/{post_id}/"}
     filename = createFile(file, post_id)
     query = table.update().values(Data="File", IsFile=1, Path=f"/static/{filename}").where(table.columns.PostID == post_id)
     conn.execute(query)
-    return {"message": f"/api/post/{post_id}/read/"}
+    return {"message": f"/api/post/{post_id}/"}
 
 def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
     if token is None:

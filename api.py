@@ -54,12 +54,12 @@ async def viewPfp(request: Request) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
     return db_users.viewPfp(token)
 
-@app.post("/api/user/pfp/set/")
+@app.post("/api/user/pfp/")
 async def setPfp(request: Request, file: UploadFile = File(...)) -> dict:
     token = request.headers.get("token")
     return db_users.setPfp(token, file)
 
-@app.delete("/api/user/pfp/delete/")
+@app.delete("/api/user/pfp/")
 async def deletePfp(request: Request) -> dict:
     token = request.headers.get("token")
     return db_users.deletePfp(token)
@@ -69,41 +69,41 @@ async def getUserTags(request: Request) -> dict:
     token = request.headers.get("token")
     return db_tags.getUserTags(token)
 
-@app.post("/api/post/create/")
+@app.post("/api/post/")
 async def createPost(request: Request, post_json: Post) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     post = post_json.dict()
     post["token"] = token
     return db_posts.createPost(post)
 
-@app.post("/api/post/create/file/")
+@app.post("/api/post/file/")
 async def createPostFile(request: Request, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
     token = request.headers.get('token')
     return db_posts.createPost({"token": token}, file, isFile=True)
 
-@app.get("/api/post/{post_id}/read/")
+@app.get("/api/post/{post_id}/")
 async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
     return db_posts.readPost(post_id, token)
 
-@app.put("/api/post/{post_id}/update/")
+@app.put("/api/post/{post_id}/")
 async def updatePost(request: Request, post_id: int, post_json: Post) -> Union[HTTPException, dict]:
     token = request.headers.get('token')
     post = post_json.dict()
     post["token"] = token
     return db_posts.updatePost(post, post_id)
 
-@app.put("/api/post/{post_id}/update/file/")
+@app.put("/api/post/{post_id}/file/")
 async def updatePostFile(request: Request, post_id: int, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.updatePost({"token": token}, post_id, file, isFile=True)
 
-@app.delete("/api/post/{post_id}/delete/")
+@app.delete("/api/post/{post_id}/")
 async def deletePost(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
 
-@app.post("/api/post/{post_id}/tags/add/")
+@app.post("/api/post/{post_id}/tags/")
 async def updatePostTags(request: Request, tags_json: Tags, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     tags = tags_json.dict()
