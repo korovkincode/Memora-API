@@ -173,3 +173,14 @@ def test_Pfp():
     response = client.get("/api/user/pfp/", headers={"token": TOKEN})
     assert response.status_code == 404
     assert response.json() == {"detail": "No pfp for this token!"}
+
+def test_userTags():
+    response = client.get("/api/user/tags/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.get("/api/user/tags/", headers={"token": "1234"})
+    assert response.status_code == 200
+    assert response.json() == {"tags": []}
+    response = client.get("/api/user/tags/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json() == {"tags": ["Note"]}
