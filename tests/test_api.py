@@ -96,7 +96,7 @@ def test_deletePost():
     assert response.json() == {"message": "Wrong token!"}
     response = client.delete("/api/post/1/", headers={"token": TOKEN})
     assert response.status_code == 200
-    assert response.json() == {"message": "Deleted post"}
+    assert response.json() == {"message": "Delete post"}
     response = client.get("/api/post/1/", headers={"token": TOKEN})
     assert response.status_code == 404
     assert response.json() == {"detail": "No such post!"}
@@ -134,3 +134,42 @@ def test_postTags():
     response = client.get("/api/post/2/tags/", headers={"token": TOKEN})
     assert response.status_code == 200
     assert response.json() == {"tags": ["Note"]}
+
+def test_Pfp():
+    response = client.get("/api/user/pfp/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.get("/api/user/pfp/", headers={"token": "1234"})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No pfp for this token!"}
+    response = client.get("/api/user/pfp/", headers={"token": TOKEN})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No pfp for this token!"}
+    response = client.delete("/api/user/pfp/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.delete("/api/user/pfp/", headers={"token": "1234"})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token!"}
+    response = client.delete("/api/user/pfp/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json() == {"message": "Delete pfp"}
+    response = client.post("/api/user/pfp/", files={"file": ("picture.jpg", open("picture.jpg", "rb"), "image/jpeg")})
+    assert response.status_code == 200
+    assert response.json() == {"message": "No token!"}
+    response = client.post("/api/user/pfp/", headers={"token": "1234"},
+    files={"file": ("picture.jpg", open("picture.jpg", "rb"), "image/jpeg")})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Wrong token!"}
+    response = client.post("/api/user/pfp/", headers={"token": TOKEN},
+    files={"file": ("picture.jpg", open("picture.jpg", "rb"), "image/jpeg")})
+    assert response.status_code == 200
+    assert response.json() == {"message": "Set pfp"}
+    response = client.get("/api/user/pfp/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    response = client.delete("/api/user/pfp/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json() == {"message": "Delete pfp"}
+    response = client.get("/api/user/pfp/", headers={"token": TOKEN})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No pfp for this token!"}

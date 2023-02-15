@@ -90,7 +90,7 @@ def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, di
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
     delFile(post_id)
-    return {"message": "Deleted post"}
+    return {"message": "Delete post"}
 
 def getNumberOfPosts() -> int:
     engine, conn, metadata = connect()

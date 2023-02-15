@@ -63,6 +63,8 @@ def viewPfp(token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]
 def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
     if token is None:
         return {"message": "No token!"}
+    if getUserByToken(token) == 0:
+        raise HTTPException(status_code=404, detail="Wrong token!")
     engine, conn, metadata = connect()
     table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     filename = createFilePfp(token, file)
@@ -73,6 +75,8 @@ def setPfp(token: Union[str, None], file: UploadFile = File(...)) -> dict:
 def deletePfp(token: Union[str, None]) -> dict:
     if token is None:
         return {"message": "No token!"}
+    if getUserByToken(token) == 0:
+        raise HTTPException(status_code=404, detail="Wrong token!")
     engine, conn, metadata = connect()
     table = db.Table(USERS_NAME, metadata, autoload=True, autoload_with=engine)
     query = table.update().values(PicturePath=None).where(table.columns.Token == token)
