@@ -7,8 +7,9 @@ from sqlalchemy.engine.base import Engine, Connection
 from sqlalchemy.sql.schema import MetaData
 
 POSTS_NAME = "Posts"
+LINK_NAME = "File-Posts"
 
-def setup() -> None:
+def setupPosts() -> None:
     engine, conn, metadata = connect()
 
     posts = db.Table(
@@ -16,8 +17,16 @@ def setup() -> None:
         db.Column("PostID", db.Integer(), primary_key=True),
         db.Column("UserToken", db.String(10), nullable=False),
         db.Column("Data", db.String(), nullable=False),
-        db.Column("IsFile", db.Boolean(), default=False, nullable=False),
-        db.Column("Path", db.String(100))
+    )
+    metadata.create_all(engine)
+
+def setupLink() -> None:
+    engine, conn, metadata = connect()
+
+    link = db.Table(
+        LINK_NAME, metadata,
+        db.Column("PostID", db.Integer()),
+        db.Column("Filename", db.String(100))
     )
     metadata.create_all(engine)
 
@@ -27,22 +36,15 @@ def connect() -> tuple[Engine, Connection, MetaData]:
     metadata = db.MetaData()
     return engine, conn, metadata
 
-def createPost(post: dict, file=None, isFile=False) -> Union[HTTPException, dict]:
+def createPost(post: dict) -> Union[HTTPException, dict]:
     if not db_users.getUserByToken(post["token"]):
         raise HTTPException(status_code=404, detail="No such user!")
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
-    if not isFile:
-        query = db.insert(table).values(UserToken=post["token"], Data=post["data"], IsFile=False)
-        conn.execute(query)
-        tableL = conn.execute(table.select()).fetchall()
-        cur_id = tableL[-1][0]
-        return {"message": f"/api/post/{getNumberOfPosts()}/"}
-    filename = createFile(file)
-    query = db.insert(table).values(UserToken=post["token"], Data="File", IsFile=True, Path=f"static/{filename}")
+    query = db.insert(table).values(UserToken=post["token"], Data=post["data"])
     conn.execute(query)
     tableL = conn.execute(table.select()).fetchall()
-    cur_id = tableL[0][0]
+    cur_id = tableL[-1][0]
     return {"message": f"/api/post/{getNumberOfPosts()}/"}
 
 def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
@@ -69,7 +71,7 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> Union[HTTPE
         return {"message": "Wrong token!"}
     delFile(post_id)
     if not isFile:
-        query = table.update().values(Data=post["data"], IsFile=0, Path=None).where(table.columns.PostID == post_id)
+        query = table.update().values(Data=post["data"]).where(table.columns.PostID == post_id)
         conn.execute(query)
         return {"message": f"/api/post/{post_id}/"}
     filename = createFile(file, post_id)

@@ -3,11 +3,11 @@ from fastapi import HTTPException
 from sqlalchemy.engine.base import Engine, Connection
 from sqlalchemy.sql.schema import MetaData
 from typing import Union
-import db_users, db_posts
+import db_posts
 
 
 TAGS_NAME = "Tags"
-LINK_NAME = "Link"
+LINK_NAME = "Tags-Link"
 
 def setupTags() -> None:
 
@@ -61,7 +61,7 @@ def readPostTags(post_id: int, token: Union[str, None]) -> Union[HTTPException, 
     table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     tags = []
-    for postid, tag_id in tableL:
+    for post_id, tag_id in tableL:
         tags.append(getTagName(tag_id))
     return {"tags": tags}
 

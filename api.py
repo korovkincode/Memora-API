@@ -8,7 +8,7 @@ from typing import Union
 #TOKEN -> 4b295759a4
 
 db_users.setup()
-db_posts.setup()
+db_posts.setupPosts()
 db_tags.setupTags()
 db_tags.setupLink()
 
@@ -76,11 +76,6 @@ async def createPost(request: Request, post_json: Post) -> Union[HTTPException, 
     post["token"] = token
     return db_posts.createPost(post)
 
-@app.post("/api/post/file/")
-async def createPostFile(request: Request, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
-    token = request.headers.get('token')
-    return db_posts.createPost({"token": token}, file, isFile=True)
-
 @app.get("/api/post/{post_id}/")
 async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileResponse, dict]:
     token = request.headers.get("token")
@@ -88,7 +83,7 @@ async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileR
 
 @app.put("/api/post/{post_id}/")
 async def updatePost(request: Request, post_id: int, post_json: Post) -> Union[HTTPException, dict]:
-    token = request.headers.get('token')
+    token = request.headers.get("token")
     post = post_json.dict()
     post["token"] = token
     return db_posts.updatePost(post, post_id)
