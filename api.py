@@ -1,20 +1,18 @@
 from fastapi import FastAPI, Request, File, UploadFile, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import db_users, db_posts, db_tags
 from typing import Union
 
-#TOKEN -> 4b295759a4
+#TOKEN -> 408c2f5554
 
 db_users.setup()
 db_posts.setupPosts()
+db_posts.setupLink()
 db_tags.setupTags()
 db_tags.setupLink()
 
 app = FastAPI()
-
-#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class UserRegister(BaseModel):
     username: str

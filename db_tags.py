@@ -69,7 +69,7 @@ def getUserTags(token: Union[str, None]) -> dict:
     if token is None:
         return {"message": "No token!"}
     tags = []
-    for postID in db_posts.postsIDByToken(token):
+    for postID in db_posts.getPostsIDByToken(token):
         curTags = readPostTags(postID, token)
         if isinstance(curTags, dict):
             tags += curTags["tags"]
