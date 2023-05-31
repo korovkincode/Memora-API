@@ -21,7 +21,6 @@ def setupPosts() -> None:
     metadata.create_all(engine)
 
 def setupLink() -> None:
-    print("here")
     engine, conn, metadata = connect(flag=1)
 
     link = db.Table(
@@ -60,7 +59,7 @@ def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, File
         return {"message": "Wrong token!"}
     return {"data": tableL[0][2], "filenames": getFilesByID(post_id)}
 
-def updatePost(post: dict, post_id: int, file=None, isFile=False) -> Union[HTTPException, dict]:
+def updatePost(post: dict, post_id: int, file=None, isFile=0) -> Union[HTTPException, dict]:
     engine, conn, metadata = connect()
     table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
@@ -79,7 +78,7 @@ def updatePost(post: dict, post_id: int, file=None, isFile=False) -> Union[HTTPE
     conn.execute(query)
     return {"message": f"/api/post/{post_id}/"}
 
-def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
+def deletePost(post_id: int, token: Union[str, None], filename=None) -> Union[HTTPException, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect()
@@ -89,6 +88,13 @@ def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, di
         raise HTTPException(status_code=404, detail="No such post!")
     if tableL[0][1] != token:
         return {"message": "Wrong token!"}
+    if filename is not None:
+        engine, conn, metadata = connect(flag=1)
+        table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+        query = table.delete().where(table.columns.Filename == "/static/" + filename)
+        conn.execute(query)
+        delFile(["/static/" + filename])
+        return {"message": "Deleted file"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
     engine, conn, metadata = connect(flag=1)

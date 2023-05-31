@@ -33,6 +33,9 @@ class Post(BaseModel):
 class Tags(BaseModel):
     tags: list[str]
 
+class Filename(BaseModel):
+    filename: str
+
 @app.get("/api/")
 async def root() -> dict:
     return {"message": "API for Memora with Python + FastAPI -> https://github.com/korovkincode/Memora-API"}
@@ -89,12 +92,17 @@ async def updatePost(request: Request, post_id: int, post_json: Post) -> Union[H
 @app.put("/api/post/{post_id}/file/")
 async def updatePostFile(request: Request, post_id: int, file: UploadFile = File(...)) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
-    return db_posts.updatePost({"token": token}, post_id, file, isFile=True)
+    return db_posts.updatePost({"token": token}, post_id, file, isFile=1)
 
 @app.delete("/api/post/{post_id}/")
 async def deletePost(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.deletePost(post_id, token)
+
+@app.delete("/api/post/{post_id}/file/")
+async def deletePostFile(request: Request, post_id: int, filename_json: Filename) -> Union[HTTPException, dict]:
+    token = request.headers.get("token")
+    return db_posts.deletePost(post_id, token, filename=filename_json.dict()["filename"])
 
 @app.post("/api/post/{post_id}/tags/")
 async def updatePostTags(request: Request, tags_json: Tags, post_id: int) -> Union[HTTPException, dict]:
