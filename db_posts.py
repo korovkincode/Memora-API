@@ -47,7 +47,7 @@ def createPost(post: dict) -> Union[HTTPException, dict]:
     curID = tableL[-1][0]
     return {"message": f"/api/post/{curID}/"}
 
-def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, FileResponse, dict]:
+def readPost(post_id: int, token: Union[str, None]) -> Union[HTTPException, dict]:
     if token is None:
         return {"message": "No token!"}
     engine, conn, metadata = connect()
@@ -105,6 +105,22 @@ def deletePost(post_id: int, token: Union[str, None], filename=None) -> Union[HT
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
     return {"message": "Delete post"}
+
+def getStaticFile(token: Union[str, None], filename: str) -> Union[HTTPException, FileResponse, dict]:
+    if token is None:
+        return {"message": "No token!"}
+    engine, conn, metadata = connect(flag=1)
+    table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.Filename == "/static/" + filename)).fetchall()
+    if tableL == []:
+        raise HTTPException(status_code=404, detail="No such file")
+    post_id = tableL[0][0]
+    engine, conn, metadata = connect()
+    table = db.Table(POSTS_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    if tableL[0][1] != token:
+        return {"message": "Wrong token!"}
+    return FileResponse(f"static/{filename}")
 
 def getNumberOfPosts() -> int:
     engine, conn, metadata = connect()

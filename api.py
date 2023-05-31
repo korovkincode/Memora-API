@@ -78,7 +78,7 @@ async def createPost(request: Request, post_json: Post) -> Union[HTTPException, 
     return db_posts.createPost(post)
 
 @app.get("/api/post/{post_id}/")
-async def readPost(request: Request, post_id: int) -> Union[HTTPException, FileResponse, dict]:
+async def readPost(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_posts.readPost(post_id, token)
 
@@ -114,3 +114,8 @@ async def updatePostTags(request: Request, tags_json: Tags, post_id: int) -> Uni
 async def readPostTags(request: Request, post_id: int) -> Union[HTTPException, dict]:
     token = request.headers.get("token")
     return db_tags.readPostTags(post_id, token)
+
+@app.get("/api/static/{filename}")
+async def getStaticFile(request: Request, filename: str) -> Union[HTTPException, FileResponse, dict]:
+    token = request.headers.get("token")
+    return db_posts.getStaticFile(token, filename)
