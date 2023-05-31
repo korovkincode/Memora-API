@@ -91,7 +91,13 @@ def deletePost(post_id: int, token: Union[str, None]) -> Union[HTTPException, di
         return {"message": "Wrong token!"}
     query = table.delete().where(table.columns.PostID == post_id)
     conn.execute(query)
-    delFile(post_id)
+    engine, conn, metadata = connect(flag=1)
+    table = db.Table(LINK_NAME, metadata, autoload=True, autoload_with=engine)
+    tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
+    filenames = [col[1] for col in tableL]
+    delFile(filenames)
+    query = table.delete().where(table.columns.PostID == post_id)
+    conn.execute(query)
     return {"message": "Delete post"}
 
 def getNumberOfPosts() -> int:
@@ -118,12 +124,10 @@ def getFilesByID(post_id: int) -> list[str]:
     tableL = conn.execute(table.select().where(table.columns.PostID == post_id)).fetchall()
     return [file[1] for file in tableL] 
 
-def delFile(name: int) -> Union[int, None]:
+def delFile(filenames: list[str]) -> None:
     for filename in os.listdir("static"):
-        curName = filename[:filename.index(".")]
-        if int(curName) == name:
+        if ("/static/" + filename) in filenames:
             os.remove(f"static/{filename}")
-            return 1
 
 def createFile(file, post_id) -> str:
     timestamp = str(int(time.time() * 1000))
