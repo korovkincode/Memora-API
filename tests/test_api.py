@@ -4,8 +4,9 @@ sys.path.append('..')
 try:
     os.remove("db/Users.sqlite")
     os.remove("db/Posts.sqlite")
+    os.remove("db/Posts-Link.sqlite")
     os.remove("db/Tags.sqlite")
-    os.remove("db/Link.sqlite")
+    os.remove("db/Tags-Link.sqlite")
 except:
     pass
 
@@ -48,8 +49,7 @@ def test_createPost():
     response = client.post("/api/post/", headers={"token": TOKEN}, json=data)
     assert response.status_code == 200
     assert response.json()["message"] == "/api/post/1/"
-    response = client.post("/api/post/file/", headers={"token": TOKEN},
-    files={"file": ("picture.jpg", open("picture.jpg", "rb"), "image/jpeg")})
+    response = client.post("/api/post/", headers={"token": TOKEN}, json=data)
     assert response.status_code == 200
     assert response.json()["message"] == "/api/post/2/"
 
@@ -64,8 +64,9 @@ def test_readPost():
     assert response.status_code == 200
     assert response.json() == {"message": "Wrong token!"}
     response = client.get("/api/post/1/", headers={"token": TOKEN})
+    print(response)
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello, World!"}
+    assert response.json() == {"data": "Hello, World!", "filenames": []}
 
 def test_updatePost():
     data = {"data": "Hello!"}
@@ -82,7 +83,15 @@ def test_updatePost():
     assert response.json() == {"message": "/api/post/1/"}
     response = client.get("/api/post/1/", headers={"token": TOKEN})
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello!"}
+    assert response.json() == {"data": "Hello!", "filenames": []}
+    response = client.put("/api/post/1/file/", headers={"token": TOKEN},
+    files={"file": ("picture.jpg", open("picture.jpg", "rb"), "image/jpeg")})
+    assert response.status_code == 200
+    assert response.json()["message"] == "/api/post/1/"
+    response = client.get("/api/post/1/", headers={"token": TOKEN})
+    assert response.status_code == 200
+    assert response.json().get("filenames", None) is not None
+    assert len(response.json().get("filenames", [])) == 1
 
 def test_deletePost():
     response = client.delete("/api/post/3/")
