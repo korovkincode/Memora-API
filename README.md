@@ -1,35 +1,41 @@
-<h1>Memora API Guide</h1>
-<h2>Sign up</h2>
-<p>
+# Memora API Guide
+## Sign up
 ```http
 POST /api/signup/
 ```
-Request body requirements:<br>
-<code>{<br>
-    "username": str,<br>
-    "password": str,<br>
-    "name": str,<br>
-    "surname": str,<br>
-    "email": str,<br>
-    "gender": str,<br>
-    "birthdate": str,<br>
-}<br></code>
-If everything went good you will receive this response:<br>
-<code>{"message": "Add new user"}</code><br></p>
-<h2>Authentication Token</h2>
+### Request body
+```json
+{
+    "username": "str",
+    "password": "str",
+    "name": "str",
+    "surname": "str",
+    "email": "str",
+    "gender": "str",
+    "birthdate": "str",
+}
+```
+### Response
+```json
+{"message": "Add new user"}
+```
+## Authentication Token
 Each user has their own unique 10 digit token. This token will be used for every request to define a user.<br>
 ```http
 POST /api/login/
 ```
-Request body requirements:<br>
-<code>{<br>
-    "username": str,<br>
-    "password": str,<br>
-}<br>
-</code><br>
-If everything went good you will receive a response like this:<br>
-<pre>{"message": "abcde12345"(example of token)}</pre><br>
-<h2>API Table</h2>
+### Request body
+```json
+{
+    "username": "str",
+    "password": "str"
+}
+```
+### Response
+```json
+{"message": "abcde12345"}
+```
+## API Table
 <table>
 <thead>
     <tr>
@@ -60,6 +66,7 @@ If everything went good you will receive a response like this:<br>
         }
         </pre></td>
         <td><pre>{"message": "Add new user"}</pre></td>
+        <td>-</td>
     </tr>
     <tr>
         <td><b>Get a token</b></td>
@@ -73,6 +80,7 @@ If everything went good you will receive a response like this:<br>
         }
         </pre></td>
         <td><pre>{"message": "abcde12345"(example of token)}</pre></td>
+        <td>-</td>
     </tr>
 </tbody>
 </table>
