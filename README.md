@@ -39,31 +39,31 @@ If everything went good you will receive a response like this:<br>
 </thead>
 <tbody>
     <tr>
-        <td>Sign up a user</td>
-        <td>POST</td>
-        <td>/api/signup/</td>
+        <td><b>Sign up a user</b></td>
+        <td><i>POST</i></td>
+        <td><i>/api/signup/</i></td>
         <td>None</td>
         <td>
-        <code>{<br>
-            "username": str,<br>
-            "password": str,<br>
-            "name": str,<br>
-            "surname": str,<br>
-            "email": str,<br>
-            "gender": str,<br>
-            "birthdate": str,<br>
+        <code>{
+            "username": str,
+            "password": str,
+            "name": str,
+            "surname": str,
+            "email": str,
+            "gender": str,
+            "birthdate": str,
         }</code></td>
         <td><code>{"message": "Add new user"}</code></td>
     </tr>
     <tr>
-        <td>Get a token</td>
-        <td>POST</td>
-        <td>/api/login/</td>
+        <td><b>Get a token</b></td>
+        <td><i>POST</i></td>
+        <td><i>/api/login/</i></td>
         <td>None</td>
         <td>
-        <code>{<br>
-            "username": str,<br>
-            "password": str,<br>
+        <code>{
+            "username": str,
+            "password": str,
         }</code></td>
         <td><code>{"message": "abcde12345"(example of token)}</code></td>
     </tr>
