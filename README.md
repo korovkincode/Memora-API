@@ -17,7 +17,7 @@ Request body requirements:<br>
 If everything went good you will receive this response:<br>
 <code>{"message": "Add new user"}</code><br></p>
 <h2>Authentication Token</h2>
-<p>Each user has their own unique 10 digit token. This token will be used for every request to define a user.<br>
+Each user has their own unique 10 digit token. This token will be used for every request to define a user.<br>
 ```http
 POST /api/login/
 ```
@@ -28,7 +28,7 @@ Request body requirements:<br>
 }<br>
 </code><br>
 If everything went good you will receive a response like this:<br>
-<pre>{"message": "abcde12345"(example of token)}</pre><br></p>
+<pre>{"message": "abcde12345"(example of token)}</pre><br>
 <h2>API Table</h2>
 <table>
 <thead>
@@ -56,7 +56,7 @@ If everything went good you will receive a response like this:<br>
             "surname": str,
             "email": str,
             "gender": str,
-            "birthdate": str,
+            "birthdate": str
         }
         </pre></td>
         <td><pre>{"message": "Add new user"}</pre></td>
@@ -69,7 +69,7 @@ If everything went good you will receive a response like this:<br>
         <td><pre>
         {
             "username": str,
-            "password": str,
+            "password": str
         }
         </pre></td>
         <td><pre>{"message": "abcde12345"(example of token)}</pre></td>
